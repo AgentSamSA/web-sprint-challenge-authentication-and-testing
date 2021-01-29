@@ -9,7 +9,7 @@ module.exports = (req, res, next) => {
         res.status(401).json("token invalid");
       } else {
         req.decodedJwt = decoded;
-        next()
+        next();
       }
     });
   } else {

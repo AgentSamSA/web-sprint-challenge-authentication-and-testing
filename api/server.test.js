@@ -43,7 +43,7 @@ describe("server", () => {
       const res = await request(server).post("/api/auth/login").send(sammy);
       expect(res.status).toBe(200);
     });
-    it("responds with the logged in user", async () => {
+    it("responds with a message welcoming the logged in user", async () => {
       let res;
       await request(server).post("/api/auth/register").send(sammy);
       await request(server).post("/api/auth/register").send(jimmy);
@@ -56,8 +56,20 @@ describe("server", () => {
   });
   describe("[GET] /api/jokes", () => {
     it("responds with 200 OK", async () => {
-      const res = await request(server).get("/api/jokes");
+      let res;
+      await request(server).post("/api/auth/register").send(sammy);
+      res = await request(server).post("/api/auth/login").send(sammy);
+      const token = res.body.token;
+      res = await request(server).get("/api/jokes").set("Authorization", token);
       expect(res.status).toBe(200);
+    });
+    it("responds with the correct number of jokes", async () => {
+      let res;
+      await request(server).post("/api/auth/register").send(sammy);
+      res = await request(server).post("/api/auth/login").send(sammy);
+      const token = res.body.token;
+      res = await request(server).get("/api/jokes").set("Authorization", token);
+      expect(res.body).toHaveLength(3);
     });
   });
 });
