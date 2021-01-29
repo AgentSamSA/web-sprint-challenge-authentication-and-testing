@@ -23,7 +23,7 @@ afterAll(async () => {
 })
 
 describe("server", () => {
-  describe("[POST] /api/register", () => {
+  describe("[POST] /api/auth/register", () => {
     it("responds with 201 Created", async () => {
       const res = await request(server).post("/api/auth/register").send(sammy);
       expect(res.status).toBe(201);
@@ -36,6 +36,23 @@ describe("server", () => {
       res = await request(server).post("/api/auth/register").send(jimmy);
       expect(res.body.username).toBe("jimmy");
     })
+  });
+  describe("[POST] /api/auth/login", () => {
+    it("responds with 200 OK", async () => {
+      await request(server).post("/api/auth/register").send(sammy);
+      const res = await request(server).post("/api/auth/login").send(sammy);
+      expect(res.status).toBe(200);
+    });
+    it("responds with the logged in user", async () => {
+      let res;
+      await request(server).post("/api/auth/register").send(sammy);
+      await request(server).post("/api/auth/register").send(jimmy);
+      res = await request(server).post("/api/auth/login").send(sammy);
+      expect(res.body.message).toBe("Welcome, sammy");
+
+      res = await request(server).post("/api/auth/login").send(jimmy);
+      expect(res.body.message).toBe("Welcome, jimmy");
+    });
   });
   describe("[GET] /api/jokes", () => {
     it("responds with 200 OK", async () => {
