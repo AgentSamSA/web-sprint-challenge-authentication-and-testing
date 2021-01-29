@@ -1,8 +1,5 @@
-const Users = require("../users/users-model");
-
 module.exports = {
-    validUser,
-    uniqueUser
+    validUser
 }
 
 function validUser(req, res, next) {
@@ -11,15 +8,4 @@ function validUser(req, res, next) {
     } else {
         next();
     }
-}
-
-function uniqueUser(req, res, next) {
-    Users.getBy(req.body.username)
-        .then(user => {
-            if (user) {
-                res.status(400).json({ message: "username taken" });
-            } else {
-                next();
-            }
-        });
 }

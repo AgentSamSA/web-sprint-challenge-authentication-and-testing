@@ -4,9 +4,9 @@ const jwt = require("jsonwebtoken");
 const { jwtSecret } = require("../../config/secrets");
 
 const Users = require("../users/users-model");
-const { validUser, uniqueUser } = require("../middleware/users-service");
+const { validUser } = require("../middleware/users-service");
 
-router.post('/register', validUser, uniqueUser, (req, res) => {
+router.post('/register', validUser, (req, res) => {
   const credentials = req.body;
   const rounds = process.env.BCRYPT_ROUNDS || 10;
   const hash = bcrypt.hashSync(credentials.password, rounds);
@@ -18,7 +18,7 @@ router.post('/register', validUser, uniqueUser, (req, res) => {
       res.status(201).json(user);
     })
     .catch(err => {
-      res.status(500).json({ message: err.message });
+      res.status(500).json({ message: "username taken", errMessage: err.message });
     });
   /*
     IMPLEMENT
@@ -46,8 +46,18 @@ router.post('/register', validUser, uniqueUser, (req, res) => {
   */
 });
 
-router.post('/login', (req, res) => {
-  res.end('implement login, please!');
+router.post('/login', validUser, (req, res) => {
+  const { username, password } = req.body;
+
+  Users.getBy({ username: username })
+    .then(([user]) => {
+      if (user && bcrypt.compareSync(password, user.password)) {
+        const token = generateToken(user);
+        res.status(200).json({ message: `Welcome, ${username}`, token: token });
+      } else {
+        res.status(401).json({ message: "invalid credentials" });
+      }
+    });
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -72,5 +82,17 @@ router.post('/login', (req, res) => {
       the response body should include a string exactly as follows: "invalid credentials".
   */
 });
+
+function generateToken(user) {
+  const payload = {
+    subject: user.id,
+    username: user.username,
+  }
+  const options = {
+    expiresIn: "1d"
+  }
+
+  return jwt.sign(payload, jwtSecret, options);
+}
 
 module.exports = router;
